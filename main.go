@@ -20,5 +20,7 @@ func main() {
 	r.GET("/reservations", controllers.GetRservations)
 	r.POST("/reservations", controllers.NewReservation)
 
+	r.GET("/clients", controllers.GetClients)
+	r.POST("/clients", controllers.NewClient)
 	r.Run() // Démarre le serveur sur localhost:8080
 }

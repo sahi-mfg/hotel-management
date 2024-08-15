@@ -33,16 +33,28 @@ func CreateChambre(c *gin.Context) {
 
 // Afficher les clients
 func GetClients(c *gin.Context) {
-
+	var clients []models.Client
+	database.DB.Find(&clients)
+	c.JSON(http.StatusOK, clients)
 }
 
 // Ajouter un nouveau client
 func NewClient(c *gin.Context) {
-
+	var client models.Client
+	if err := c.ShouldBindJSON(&client); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	database.DB.Create(&client)
+	c.JSON(http.StatusOK, client)
 }
 
 // Supprimer les client qui ont checkout
 func DeleteClient(c *gin.Context) {
+
+}
+
+func UpdateClient(c *gin.Context) {
 
 }
 
@@ -60,6 +72,14 @@ func NewReservation(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
 	database.DB.Create(&reservation)
+}
+
+func UpdateRservation(c *gin.Context) {
+
+}
+
+func DeleteReservation(c *gin.Context) {
+
 }
 
 // Afficher les status d'occupation des chambres
