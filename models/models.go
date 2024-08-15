@@ -5,7 +5,6 @@ type Client struct {
 	Nom       string `gorm:"size:100;not null"`
 	Prenom    string `gorm:"size:100;not null"`
 	Telephone string `gorm:"size:20"`
-	Email     string `gorm:"size:100"`
 }
 
 type Chambre struct {
