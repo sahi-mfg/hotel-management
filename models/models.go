@@ -9,9 +9,11 @@ import (
 type Client struct {
 	gorm.Model
 	Nom          string        `json:"nom"`
-	Prenom       string        `json:"prenom"`
+	Email        string        `json:"email"`
 	Telephone    string        `json:"telephone"`
-	Reservations []Reservation `json:"reservations"` // Relation avec les réservations
+	Reservations []Reservation `json:"reservations"`
+	TotalDu      float64       `json:"total_du"`
+	TotalPaye    float64       `json:"total_paye"`
 }
 
 type Chambre struct {
@@ -29,4 +31,5 @@ type Reservation struct {
 	ChambreID uint      `json:"chambre_id"`
 	ClientID  uint      `json:"client_id"`
 	PrixTotal float64   `json:"prix_total"`
+	Paye      bool      `json:"paye"`
 }
