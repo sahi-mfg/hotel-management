@@ -3,6 +3,7 @@ package controllers
 import (
 	"hotel-management/database"
 	"hotel-management/models"
+	"hotel-management/services"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -18,17 +19,6 @@ func GetChambres(c *gin.Context) {
 	var chambres []models.Chambre
 	database.DB.Find(&chambres)
 	c.JSON(http.StatusOK, chambres)
-}
-
-// Ajouter une chambre
-func CreateChambre(c *gin.Context) {
-	var chambre models.Chambre
-	if err := c.ShouldBindJSON(&chambre); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	database.DB.Create(&chambre)
-	c.JSON(http.StatusOK, chambre)
 }
 
 // Afficher les clients
@@ -70,8 +60,41 @@ func NewReservation(c *gin.Context) {
 	var reservation models.Reservation
 	if err := c.ShouldBindJSON(&reservation); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
+
+	// Vérifiez la disponibilité de la chambre
+	if !services.VerifierDisponibilite(reservation.ChambreID, reservation.DateDebut, reservation.DateFin) {
+		c.JSON(http.StatusConflict, gin.H{"error": "Chambre non disponible pour les dates spécifiées"})
+		return
+	}
+
+	// Récupérez la chambre et calculez le prix total
+	var chambre models.Chambre
+	if err := database.DB.Where("id = ?", reservation.ChambreID).First(&chambre).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Chambre non trouvée"})
+		return
+	}
+
+	jours := reservation.DateFin.Sub(reservation.DateDebut).Hours() / 24
+	reservation.PrixTotal = chambre.PrixNuit * jours
+
+	// Mettre à jour le statut de la chambre
+	chambre.Statut = "occupée"
+	database.DB.Save(&chambre)
+
+	// Ajoutez la réservation au client
+	var client models.Client
+	if err := database.DB.Where("id = ?", reservation.ClientID).First(&client).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Client non trouvé"})
+		return
+	}
+	client.TotalDu += reservation.PrixTotal
+
+	database.DB.Save(&client)
 	database.DB.Create(&reservation)
+
+	c.JSON(http.StatusOK, reservation)
 }
 
 func UpdateRservation(c *gin.Context) {
@@ -82,8 +105,27 @@ func DeleteReservation(c *gin.Context) {
 
 }
 
-// Afficher les status d'occupation des chambres
+func EnregistrerPaiement(c *gin.Context) {
+	var input struct {
+		ClientID uint    `json:"client_id"`
+		Montant  float64 `json:"montant"`
+	}
 
-func Occupation(c *gin.Context) {
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
+	var client models.Client
+	if err := database.DB.Where("id = ?", input.ClientID).First(&client).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Client non trouvé"})
+		return
+	}
+
+	client.TotalPaye += input.Montant
+	client.TotalDu -= input.Montant
+
+	database.DB.Save(&client)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Paiement enregistré", "solde_restant": client.TotalDu})
 }

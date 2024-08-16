@@ -15,7 +15,6 @@ func main() {
 
 	// Routes pour les chambres
 	r.GET("/chambres", controllers.GetChambres)
-	r.POST("/chambres", controllers.CreateChambre)
 
 	r.GET("/reservations", controllers.GetRservations)
 	r.POST("/reservations", controllers.NewReservation)
