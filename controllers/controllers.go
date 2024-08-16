@@ -15,7 +15,7 @@ func Welcome(c *gin.Context) {
 }
 
 // Afficher toutes les chambres
-func GetChambres(c *gin.Context) {
+func GetRooms(c *gin.Context) {
 	var chambres []models.Chambre
 	database.DB.Find(&chambres)
 	c.JSON(http.StatusOK, chambres)
@@ -46,13 +46,6 @@ func DeleteClient(c *gin.Context) {
 
 func UpdateClient(c *gin.Context) {
 
-}
-
-// Afficher les reservations
-func GetRservations(c *gin.Context) {
-	var reservation models.Reservation
-	database.DB.Find(&reservation)
-	c.JSON(http.StatusOK, reservation)
 }
 
 // Nouvelles Reservations
@@ -97,12 +90,46 @@ func NewReservation(c *gin.Context) {
 	c.JSON(http.StatusOK, reservation)
 }
 
-func UpdateRservation(c *gin.Context) {
+// Afficher les reservations
+func GetReservations(c *gin.Context) {
+	var reservations []models.Reservation
+	database.DB.Preload("Chambre").Preload("Client").Find(&reservations)
+	c.JSON(http.StatusOK, reservations)
+}
 
+func UpdateReservation(c *gin.Context) {
+	var reservation models.Reservation
+	if err := database.DB.Where("id = ?", c.Param("id")).First(&reservation).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Réservation non trouvée"})
+		return
+	}
+	if err := c.ShouldBindJSON(&reservation); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	database.DB.Save(&reservation)
+	c.JSON(http.StatusOK, reservation)
 }
 
 func DeleteReservation(c *gin.Context) {
+	var reservation models.Reservation
+	if err := database.DB.Where("id = ?", c.Param("id")).First(&reservation).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Réservation non trouvée"})
+		return
+	}
 
+	var chambre models.Chambre
+	if err := database.DB.Where("id = ?", reservation.ChambreID).First(&chambre).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Chambre non trouvée"})
+		return
+	}
+
+	// Mettre à jour le statut de la chambre
+	chambre.Statut = "disponible"
+	database.DB.Save(&chambre)
+
+	database.DB.Delete(&reservation)
+	c.JSON(http.StatusOK, gin.H{"message": "Réservation supprimée"})
 }
 
 func EnregistrerPaiement(c *gin.Context) {

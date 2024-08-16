@@ -14,9 +14,9 @@ func main() {
 	r.GET("/", controllers.Welcome)
 
 	// Routes pour les chambres
-	r.GET("/chambres", controllers.GetChambres)
+	r.GET("/chambres", controllers.GetRooms)
 
-	r.GET("/reservations", controllers.GetRservations)
+	r.GET("/reservations", controllers.GetReservations)
 	r.POST("/reservations", controllers.NewReservation)
 	r.DELETE("/reservations", controllers.DeleteReservation)
 
