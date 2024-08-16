@@ -19,7 +19,7 @@ func InitDatabase() {
 	}
 
 	// Migration automatique des tables
-	err = DB.AutoMigrate(&models.Client{}, &models.Chambre{}, &models.Reservation{}, &models.Occupation{})
+	err = DB.AutoMigrate(&models.Client{}, &models.Chambre{}, &models.Reservation{})
 	if err != nil {
 		log.Fatal("Migration failed:", err)
 	}
