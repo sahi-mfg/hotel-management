@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func Welcome(c *gin.Context) {
@@ -14,18 +15,21 @@ func Welcome(c *gin.Context) {
 	c.JSON(http.StatusOK, greeting)
 }
 
+func getAllEntities[T any](c *gin.Context, db *gorm.DB, entities *[]T) {
+	db.Find(entities)
+	c.JSON(http.StatusOK, entities)
+}
+
 // Afficher toutes les chambres
 func GetRooms(c *gin.Context) {
 	var chambres []models.Chambre
-	database.DB.Find(&chambres)
-	c.JSON(http.StatusOK, chambres)
+	getAllEntities(c, database.DB, &chambres)
 }
 
 // Afficher les clients
 func GetClients(c *gin.Context) {
 	var clients []models.Client
-	database.DB.Find(&clients)
-	c.JSON(http.StatusOK, clients)
+	getAllEntities(c, database.DB, &clients)
 }
 
 // Ajouter un nouveau client
