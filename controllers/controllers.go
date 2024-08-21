@@ -4,6 +4,7 @@ import (
 	"hotel-management/database"
 	"hotel-management/models"
 	"hotel-management/services"
+	"hotel-management/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -45,10 +46,25 @@ func NewClient(c *gin.Context) {
 
 // Supprimer les client qui ont checkout
 func DeleteClient(c *gin.Context) {
-
+	var client models.Client
+	if !utils.FindEntityByID(c, database.DB, "id", &client) {
+		return
+	}
+	database.DB.Delete(&client)
+	c.JSON(http.StatusOK, gin.H{"message": "Client supprimé"})
 }
 
 func UpdateClient(c *gin.Context) {
+	var client models.Client
+	if !utils.FindEntityByID(c, database.DB, "id", &client) {
+		return
+	}
+	if err := c.ShouldBindJSON(&client); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	database.DB.Save(&client)
+	c.JSON(http.StatusOK, client)
 
 }
 
@@ -68,8 +84,7 @@ func NewReservation(c *gin.Context) {
 
 	// Récupérez la chambre et calculez le prix total
 	var chambre models.Chambre
-	if err := database.DB.Where("id = ?", reservation.ChambreID).First(&chambre).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Chambre non trouvée"})
+	if !utils.FindEntityByID(c, database.DB, "chambre_id", &chambre) {
 		return
 	}
 
@@ -82,8 +97,7 @@ func NewReservation(c *gin.Context) {
 
 	// Ajoutez la réservation au client
 	var client models.Client
-	if err := database.DB.Where("id = ?", reservation.ClientID).First(&client).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Client non trouvé"})
+	if !utils.FindEntityByID(c, database.DB, "client_id", &client) {
 		return
 	}
 	client.TotalDu += reservation.PrixTotal
@@ -103,8 +117,7 @@ func GetReservations(c *gin.Context) {
 
 func UpdateReservation(c *gin.Context) {
 	var reservation models.Reservation
-	if err := database.DB.Where("id = ?", c.Param("id")).First(&reservation).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Réservation non trouvée"})
+	if !utils.FindEntityByID(c, database.DB, "id", &reservation) {
 		return
 	}
 	if err := c.ShouldBindJSON(&reservation); err != nil {
@@ -117,14 +130,12 @@ func UpdateReservation(c *gin.Context) {
 
 func DeleteReservation(c *gin.Context) {
 	var reservation models.Reservation
-	if err := database.DB.Where("id = ?", c.Param("id")).First(&reservation).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Réservation non trouvée"})
+	if !utils.FindEntityByID(c, database.DB, "id", &reservation) {
 		return
 	}
 
 	var chambre models.Chambre
-	if err := database.DB.Where("id = ?", reservation.ChambreID).First(&chambre).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Chambre non trouvée"})
+	if !utils.FindEntityByID(c, database.DB, "chambre_id", &chambre) {
 		return
 	}
 
@@ -148,8 +159,7 @@ func EnregistrerPaiement(c *gin.Context) {
 	}
 
 	var client models.Client
-	if err := database.DB.Where("id = ?", input.ClientID).First(&client).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Client non trouvé"})
+	if !utils.FindEntityByID(c, database.DB, "client_id", &client) {
 		return
 	}
 
