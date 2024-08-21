@@ -14,3 +14,8 @@ func FindEntityByID[T any](c *gin.Context, db *gorm.DB, idParam string, entity *
 	}
 	return true
 }
+
+func GetAllEntities[T any](c *gin.Context, db *gorm.DB, entities *[]T) {
+	db.Find(entities)
+	c.JSON(http.StatusOK, entities)
+}
