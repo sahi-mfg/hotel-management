@@ -16,10 +16,12 @@ func main() {
 	// Routes pour les chambres
 	r.GET("/chambres", controllers.GetRooms)
 
+	// Routes pour les reservations
 	r.GET("/reservations", controllers.GetReservations)
 	r.POST("/reservations", controllers.NewReservation)
 	r.DELETE("/reservations", controllers.DeleteReservation)
 
+	// Routes pour les clients
 	r.GET("/clients", controllers.GetClients)
 	r.POST("/clients", controllers.NewClient)
 	r.DELETE("/clients", controllers.DeleteClient)
